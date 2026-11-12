@@ -1109,6 +1109,54 @@ Offset: ____~ ____~
 
     return
 
+def star_req(screen):
+    req = str2req("Star", """
+Points:  ___~
+Inner %: ___~
+[Cancel][OK]
+""", "", mouse_pixel_mapper=config.get_mouse_pixel_pos, font=config.font)
+    req.center(screen)
+    config.pixel_req_rect = req.get_screen_rect()
+
+    pointsg = req.gadget_id("9_0")
+    innerg = req.gadget_id("9_1")
+
+    pointsg.value = str(config.star_points)
+    pointsg.spinnerg.minvalue = 3
+    pointsg.spinnerg.maxvalue = 50
+    innerg.value = str(config.star_inner_pct)
+    innerg.spinnerg.minvalue = 1
+    innerg.spinnerg.maxvalue = 100
+
+    req.draw(screen)
+    config.recompose()
+
+    running = 1
+    while running:
+        event = config.xevent.wait()
+        gevents = req.process_event(screen, event)
+
+        if event.type == KEYDOWN and event.key == K_ESCAPE:
+            running = 0
+
+        for ge in gevents:
+            if ge.gadget.type == Gadget.TYPE_BOOL:
+                if ge.gadget.label == "OK" and not req.has_error():
+                    config.star_points = max(3, min(50, int(pointsg.value)))
+                    config.star_inner_pct = max(1, min(100, int(innerg.value)))
+                    running = 0
+                elif ge.gadget.label == "Cancel":
+                    running = 0
+
+        if not config.xevent.peek((KEYDOWN, KEYUP, MOUSEBUTTONDOWN, MOUSEBUTTONUP, MOUSEMOTION, VIDEORESIZE)):
+            req.draw(screen)
+            config.recompose()
+
+    config.pixel_req_rect = None
+    config.recompose()
+
+    return
+
 def symmetry_tile_req(screen):
     req = str2req("Symmetry", """
 [Point ][ Tile ]

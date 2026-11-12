@@ -633,6 +633,8 @@ class pydpainter:
             f.write("sys_file_dialog=%s\n" % (self.sys_file_dialog))
             f.write("ctrl_pick_override=%s\n" % (self.ctrl_pick_override))
             f.write("toolbars_outside=%s\n" % (self.toolbars_outside))
+            f.write("star_points=%d\n" % (self.star_points))
+            f.write("star_inner_pct=%d\n" % (self.star_inner_pct))
             for k in self.user_hotkeys.keys():
                 h = self.user_hotkeys[k]
                 f.write("hotkey_%s=%s\n" % (str(h), str(h.attrs["map_to"])))
@@ -705,6 +707,10 @@ class pydpainter:
                         self.ctrl_pick_override = True if vars[1] == "True" else False
                     elif vars[0] == "toolbars_outside":
                         self.toolbars_outside = True if vars[1] == "True" else False
+                    elif vars[0] == "star_points":
+                        self.star_points = max(3, min(50, int(vars[1])))
+                    elif vars[0] == "star_inner_pct":
+                        self.star_inner_pct = max(1, min(100, int(vars[1])))
                     elif vars[0][:7] == "hotkey_":
                         map_to = vars[0][7:]
                         map_from = vars[1]
@@ -859,6 +865,8 @@ class pydpainter:
         self.sys_file_dialog = False
         self.ctrl_pick_override = False
         self.toolbars_outside = False
+        self.star_points = 5
+        self.star_inner_pct = 50
         self.user_hotkeys = HotKeyMap()
         config.resize_display()
         pygame.display.set_caption("PyDPainter")
@@ -2159,7 +2167,7 @@ class pydpainter:
                    and not in_toolbars \
                    and (config.tool_selected in ["dot","draw"] \
                         or (config.ctrl_pick_override and config.tool_selected in [
-                            "line","curve","fill","airbrush","rect","circle", "ellipse","poly"])):
+                            "line","curve","fill","airbrush","rect","circle", "ellipse","poly","star"])):
                     config.dropper = True
                     config.clear_pixel_draw_canvas()
             if config.dropper and not config.xevent.is_key_down([K_LCTRL, K_RCTRL]) and not True in buttons:
