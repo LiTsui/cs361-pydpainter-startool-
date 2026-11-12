@@ -802,6 +802,54 @@ class DoCircle(ToolDragAction):
         if set_brush:
             config.brush.set_framei(config.brush.endframe, doAction=False)
 
+class DoStar(ToolDragAction):
+    """
+    Star tool: drag from the center; the first tip points at the mouse.
+    Right-click the tool to set the number of points and inner radius.
+    """
+    def selected(self, attrs):
+        if attrs["subtool"] and attrs["rightclick"]:
+            fill_req(config.pixel_req_canvas)
+        elif attrs["rightclick"]:
+            star_req(config.pixel_req_canvas)
+        else:
+            super().selected(attrs)
+
+    def drawbefore(self, coords):
+        mouseX, mouseY = coords
+        drawxorcross(config.pixel_canvas, mouseX, mouseY)
+        if config.subtool_selected == 0:
+            config.brush.draw(config.pixel_canvas, config.color, coords)
+
+    def drawstar(self, coords, button, interrupt=False):
+        if button == 1:
+            color, erase = config.color, False
+        else:
+            color, erase = config.bgcolor, True
+        drawstar(config.pixel_canvas, color, self.p1, coords,
+                 points=config.star_points,
+                 inner_ratio=config.star_inner_pct / 100.0,
+                 filled=config.subtool_selected, interrupt=interrupt, erase=erase)
+
+    def drawrubber(self, coords, buttons):
+        if self.leave_trace(coords, buttons):
+            return
+        if buttons[0]:
+            self.drawstar(coords, 1, interrupt=True)
+        elif buttons[2]:
+            self.drawstar(coords, 3, interrupt=True)
+
+    def drawfinal(self, coords, button, set_brush=True):
+        config.brush.pen_down = True
+        if button in [1, 3]:
+            self.drawstar(coords, button)
+        config.save_undo()
+        config.brush.pen_down = False
+        if config.subtool_selected:
+            cycle()
+        if set_brush:
+            config.brush.set_framei(config.brush.endframe, doAction=False)
+
 class DoEllipse(ToolDragAction):
     """
     Ellipse tool
@@ -2169,7 +2217,7 @@ def init_toolbar(config_in):
     w = tools_image.get_width()//3
     toolbar_canvas = pygame.Surface((w,h),0)
     toolbar = Toolbar(toolbar_canvas, config.cursor, (0,0,tools_image.get_width()//3, tools_image.get_height()), tools_image, width=3, tip_event=config.TOOLTIPEVENT)
-    toolbar.add_grid((0,21*scaleY,tools_image.get_width()//3, tools_image.get_height()-21*scaleY), 2, 9, attr_list=[
+    toolbar.add_grid((0,21*scaleY,tools_image.get_width()//3, tools_image.get_height()-21*scaleY), 2, 10, attr_list=[
         ["dot",      ToolGadget.TT_GROUP,  "s", DoDot],
         ["draw",     ToolGadget.TT_GROUP,  "dD", DoDraw],
         ["line",     ToolGadget.TT_GROUP,  "v V", DoLine],
@@ -2180,6 +2228,8 @@ def init_toolbar(config_in):
         ["circle",   ToolGadget.TT_GROUP,  "cC", DoCircle],
         ["ellipse",  ToolGadget.TT_GROUP,  "eE", DoEllipse],
         ["poly",     ToolGadget.TT_GROUP,  "wW", DoPoly],
+        ["star",     ToolGadget.TT_GROUP,  "aA", DoStar],
+        ["",         ToolGadget.TT_CUSTOM, ""],   # empty slot next to star
         ["brush",    ToolGadget.TT_GROUP,  "b", DoBrush],
         ["text",     ToolGadget.TT_GROUP,  "t", DoText],
         ["grid",     ToolGadget.TT_TOGGLE, "gG", DoGrid],
@@ -2250,7 +2300,7 @@ def main():
     scaleY = 1
     scaleX = 1
     mytoolbar = Toolbar(toolbar_screen, cursor_layer, (0,0,tools_image.get_width()//3, tools_image.get_height()), tools_image, width=3, tip_event=USEREVENT)
-    mytoolbar.add_grid((0,22*scaleY,tools_image.get_width()//3, tools_image.get_height()-22*scaleY), 2, 9, attr_list=[
+    mytoolbar.add_grid((0,22*scaleY,tools_image.get_width()//3, tools_image.get_height()-22*scaleY), 2, 10, attr_list=[
         ["dot",      ToolGadget.TT_GROUP,  "s"],
         ["draw",     ToolGadget.TT_GROUP,  "dD"],
         ["line",     ToolGadget.TT_GROUP,  "v V"],
@@ -2261,6 +2311,8 @@ def main():
         ["circle",   ToolGadget.TT_GROUP,  "cC"],
         ["ellipse",  ToolGadget.TT_GROUP,  "eE"],
         ["poly",     ToolGadget.TT_GROUP,  "wW"],
+        ["star",     ToolGadget.TT_GROUP,  "aA"],
+        ["",         ToolGadget.TT_CUSTOM, ""],
         ["brush",    ToolGadget.TT_GROUP,  "b"],
         ["text",     ToolGadget.TT_GROUP,  "t"],
         ["grid",     ToolGadget.TT_TOGGLE, "g", DoGrid],

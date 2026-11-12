@@ -2171,6 +2171,37 @@ def drawrect(screen, color, coordfrom, coordto, filled=0, xormode=False, drawmod
     drawpoly(screen, color, [(x1,y1), (x2,y1), (x2,y2), (x1,y2), (x1,y1)], xormode=xormode, drawmode=drawmode, handlesymm=handlesymm, interrupt=interrupt, skiplast=True, erase=erase)
 
 
+def star_coords(center, mouse, points=5, inner_ratio=0.5):
+    """
+    Return the closed vertex list of a star centered at center.
+    The first outer tip points at mouse, so dragging sets both size and angle.
+    """
+    cx, cy = center
+    ax = config.aspectX
+    ay = config.aspectY
+    # measure in aspect-corrected space so the star isn't squashed on non-square pixels
+    dx = (mouse[0] - cx) / ax
+    dy = (mouse[1] - cy) / ay
+    r_outer = math.hypot(dx, dy)
+    r_inner = r_outer * inner_ratio
+    base = math.atan2(dy, dx)
+    coords = []
+    for i in range(points * 2):
+        r = r_outer if i % 2 == 0 else r_inner
+        a = base + i * math.pi / points
+        coords.append((int(round(cx + r * math.cos(a) * ax)),
+                       int(round(cy + r * math.sin(a) * ay))))
+    coords.append(coords[0])
+    return coords
+
+def drawstar(screen, color, center, mouse, points=5, inner_ratio=0.5, filled=0, drawmode=-1, handlesymm=True, interrupt=False, erase=False):
+    coords = star_coords(center, mouse, points, inner_ratio)
+    if coords[0] == center:
+        # zero-size star: just a dot
+        drawrect(screen, color, center, center, filled=filled, drawmode=drawmode, handlesymm=handlesymm, interrupt=interrupt, erase=erase)
+        return
+    drawpoly(screen, color, coords, filled=filled, drawmode=drawmode, handlesymm=handlesymm, interrupt=interrupt, skiplast=True, erase=erase)
+
 def fillrect_symm(screen, color, coordfrom, coordto, xormode=False, handlesymm=True, interrupt=False, erase=False):
     fillrect(screen, color, coordfrom, coordto, interrupt=interrupt, erase=erase)
     x1,y1 = coordfrom

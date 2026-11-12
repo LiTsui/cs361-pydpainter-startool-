@@ -88,6 +88,15 @@ filled + " [W]",
 "Finish at starting point to complete polygon.",
 lbf, rbb]
 
+tiptext["star"] = [
+"Star Tool",
+outline + " [a]",
+filled + " [A]",
+"Drag out from center; first point follows mouse.",
+lbf, rbb,
+ctrltrace,
+"Right-click tool to set points and inner size."]
+
 tiptext["brush"] = [
 "Brush Tool [b] (rectangle or polygon)",
 "Click brush tool again to toggle rectangle or polygon shape.",
